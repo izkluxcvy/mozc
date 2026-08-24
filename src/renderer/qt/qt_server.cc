@@ -29,9 +29,9 @@
 
 #include "renderer/qt/qt_server.h"
 
-#if defined(__linux__) && !defined(__ANDROID__)
+#if (defined(__linux__) && !defined(__ANDROID__)) || defined(__OpenBSD__)
 #include <stdlib.h>
-#endif  // __linux__ && !__ANDROID__
+#endif  // (__linux__ && !__ANDROID__) || __OpenBSD__
 
 #include <QApplication>
 #include <QMetaType>
@@ -92,11 +92,11 @@ void QtServer::Update(std::string command) {
 }
 
 int QtServer::StartServer(int argc, char** argv) {
-#if defined(__linux__) && !defined(__ANDROID__)
+#if (defined(__linux__) && !defined(__ANDROID__)) || defined(__OpenBSD__)
   // |QWidget::move()| never works with wayland platform backend. Always use
   // 'xcb' platform backend.  https://github.com/google/mozc/issues/794
   ::setenv("QT_QPA_PLATFORM", "xcb", 1);
-#endif  // __linux__ && !__ANDROID__
+#endif  // (__linux__ && !__ANDROID__) || __OpenBSD__
 
   qRegisterMetaType<std::string>("std::string");
   QApplication app(argc, argv);

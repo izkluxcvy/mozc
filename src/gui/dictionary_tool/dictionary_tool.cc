@@ -354,11 +354,11 @@ DictionaryTool::DictionaryTool(QWidget* parent)
   }
 
   // main window
-#ifndef __linux__
+#if !defined(__linux__) && !defined(__OpenBSD__)
   // For some reason setCentralWidget crashes the dictionary_tool on Linux
   // TODO(taku): investigate the cause of the crashes
   setCentralWidget(splitter_);
-#endif  // __linux__
+#endif  // !__linux__ && !__OpenBSD__
 
   setContextMenuPolicy(Qt::NoContextMenu);
 

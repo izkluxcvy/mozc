@@ -447,13 +447,13 @@ bool KeyMapEditorDialog::Update() {
   absl::StrAppend(keymap_table, invisible_keymap_table_);
 
   if (new_direct_mode_commands != direct_mode_commands_) {
-#if defined(_WIN32) || defined(__linux__)
+#if defined(_WIN32) || defined(__linux__) || defined(__OpenBSD__)
     QMessageBox::information(
         this, windowTitle(),
         tr("Changes of keymaps for direct input mode will apply only to "
            "applications that are launched after making your "
            "modifications."));
-#endif  // _WIN32 || __linux__
+#endif  // _WIN32 || __linux__ || __OpenBSD__
     direct_mode_commands_ = std::move(new_direct_mode_commands);
   }
 

@@ -100,7 +100,7 @@ bool Process::OpenBrowser(absl::string_view url) {
       L"open", win32::Utf8ToWide(url).c_str(), nullptr);
 #endif  // _WIN32
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__OpenBSD__)
 
 #ifndef MOZC_BROWSER_COMMAND
   // xdg-open which uses kfmclient or gnome-open internally works both on KDE
@@ -109,7 +109,7 @@ bool Process::OpenBrowser(absl::string_view url) {
 #endif  // MOZC_BROWSER_COMMAND
 
   return SpawnProcess(MOZC_BROWSER_COMMAND, url);
-#endif  // __linux__
+#endif  // __linux__ || __OpenBSD__
 
 #ifdef __APPLE__
   return MacProcess::OpenBrowserForMac(url);
@@ -389,7 +389,7 @@ bool Process::LaunchErrorMessageDialog(absl::string_view error_type) {
   }
 #endif  // _WIN32
 
-#if defined(__linux__) && !defined(__ANDROID__)
+#if (defined(__linux__) && !defined(__ANDROID__)) || defined(__OpenBSD__)
   constexpr char kMozcTool[] = "mozc_tool";
   const std::string arg =
       absl::StrCat("--mode=error_message_dialog --error_type=", error_type);
@@ -398,7 +398,7 @@ bool Process::LaunchErrorMessageDialog(absl::string_view error_type) {
     LOG(ERROR) << "cannot launch " << kMozcTool;
     return false;
   }
-#endif  // __linux__ && !__ANDROID__
+#endif  // (__linux__ && !__ANDROID__) || __OpenBSD__
 
   return true;
 }

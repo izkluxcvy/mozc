@@ -111,7 +111,7 @@ constexpr auto kQtKeyModifierNonRequiredTable =
         {Qt::Key_Hiragana_Katakana, "Hiragana"},
         {Qt::Key_Eisu_toggle, "Eisu"},
         {Qt::Key_Zenkaku_Hankaku, "Hankaku/Zenkaku"},
-#ifdef __linux__
+#if defined(__linux__) || defined(__OpenBSD__)
         // On Linux (X / Wayland), Hangul and Hanja are identical with
         // ImeOn and ImeOff.
         // https://github.com/google/mozc/issues/552
@@ -120,7 +120,7 @@ constexpr auto kQtKeyModifierNonRequiredTable =
         {Qt::Key_Hangul, "ON"},
         // Hanja == Lang2 (USB HID) / ImeOff (Windows) / Eisu (macOS)
         {Qt::Key_Hangul_Hanja, "OFF"},
-#endif  // __linux__
+#endif  // __linux__ || __OpenBSD__
     });
 // LINT.ThenChange(//composer/key_parser_test.cc)
 
@@ -357,7 +357,7 @@ KeyBindingFilter::KeyState KeyBindingFilter::AddKey(const QKeyEvent &key_event,
     return Encode(result);
   }
 
-#elif __linux__
+#elif defined(__linux__) || defined(__OpenBSD__)
   // The XKB defines three types of logical key code: "xkb::Hiragana",
   // "xkb::Katakana" and "xkb::Hiragana_Katakana".
   // On most of Linux distributions, any key event against physical
@@ -381,7 +381,7 @@ KeyBindingFilter::KeyState KeyBindingFilter::AddKey(const QKeyEvent &key_event,
     modifier_non_required_key_ = QLatin1String("Katakana");
     return Encode(result);
   }
-#endif  // _WIN32, __linux__
+#endif  // _WIN32, __linux__, __OpenBSD__
 
   if (qt_key == Qt::Key_yen) {
     // Japanese Yen mark, treat it as backslash for compatibility
@@ -456,16 +456,16 @@ bool KeyBindingFilter::eventFilter(QObject *obj, QEvent *event) {
 KeyBindingEditor::KeyBindingEditor(QWidget *parent, QWidget *trigger_parent)
     : QDialog(parent), trigger_parent_(trigger_parent) {
   setupUi(this);
-#if defined(__linux__)
+#if defined(__linux__) || defined(__OpenBSD__)
   // Workaround for the issue https://github.com/google/mozc/issues/9
   // Seems that even after clicking the button for the keybinding dialog,
   // the edit is not raised. This might be a bug of setFocusProxy.
   setWindowFlags(Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint |
                  Qt::Tool | Qt::WindowStaysOnTopHint);
-#else   // __linux__
+#else   // __linux__ || __OpenBSD__
   setWindowFlags(Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint |
                  Qt::Tool);
-#endif  // __linux__
+#endif  // __linux__ || __OpenBSD__
 
   QPushButton *ok_button =
       KeyBindingEditorbuttonBox->button(QDialogButtonBox::Ok);

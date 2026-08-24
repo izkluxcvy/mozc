@@ -47,6 +47,7 @@ enum class PlatformType {
   kIos,       // iOS Devices or Simulator
   kWasm,      // WebAssembly
   kChromeos,  // ChromeOS
+  kOpenbsd,   // OpenBSD
 };
 
 // kTargetPlatform is the current build target platform.
@@ -70,9 +71,11 @@ inline constexpr PlatformType kTargetPlatform = PlatformType::kIos;
 #endif                   // !TARGET_OS_IPHONE
 #elif defined(__wasm__)  // __APPLE__
 inline constexpr PlatformType kTargetPlatform = PlatformType::kWasm;
-#else                    // __wasm__
+#elif defined(__OpenBSD__)  // __wasm__
+inline constexpr PlatformType kTargetPlatform = PlatformType::kOpenbsd;
+#else                    // __OpenBSD__
 #error "Unsupported target platform."
-#endif  // !__wasm__
+#endif  // !__OpenBSD__
 
 }  // namespace internal
 
@@ -158,6 +161,11 @@ constexpr bool IsWasm() {
 // The build target is ChromeOS.
 constexpr bool IsChromeos() {
   return internal::kTargetPlatform == internal::PlatformType::kChromeos;
+}
+
+// The build target is OpenBSD.
+constexpr bool IsOpenbsd() {
+  return internal::kTargetPlatform == internal::PlatformType::kOpenbsd;
 }
 
 }  // namespace port

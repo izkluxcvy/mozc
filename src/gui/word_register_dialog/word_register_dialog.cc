@@ -98,9 +98,9 @@ QString GetEnv(const char* envname) {
   }
   return QLatin1String("");
 #endif  // _WIN32
-#if defined(__APPLE__) || defined(__linux__)
+#if defined(__APPLE__) || defined(__linux__) || defined(__OpenBSD__)
   return QString::fromUtf8(::getenv(envname));
-#endif  // __APPLE__ or __linux__
+#endif  // __APPLE__ or __linux__ or __OpenBSD__
   // TODO(team): Support other platforms.
   return QLatin1String("");
 }

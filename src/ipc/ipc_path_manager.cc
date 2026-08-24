@@ -67,6 +67,12 @@
 #include "base/mac/mac_util.h"
 #endif  // __APPLE__
 
+#ifdef __OpenBSD__
+#include <sys/sysctl.h>
+
+#include <cerrno>
+#endif  // __OpenBSD__
+
 #ifdef _WIN32
 // clang-format off
 #include <windows.h>
@@ -401,6 +407,27 @@ bool IPCPathManager::IsValidServer(uint32_t pid,
   server_path_ = filename.value();
   server_pid_ = pid;
 #endif  // __linux__
+
+#ifdef __OpenBSD__
+  // load from sysctl KERN_PROC_ARGV
+  int name[] = {CTL_KERN, KERN_PROC_ARGS, static_cast<int>(pid),
+                KERN_PROC_ARGV};
+  size_t data_len = 0;
+  if (sysctl(name, std::size(name), nullptr, &data_len, nullptr, 0) < 0) {
+    LOG(ERROR) << "sysctl KERN_PROC_ARGV failed: " << strerror(errno);
+    return false;
+  }
+
+  std::string argv_buffer(data_len, '\0');
+  if (sysctl(name, std::size(name), argv_buffer.data(), &data_len, nullptr,
+             0) < 0) {
+    LOG(ERROR) << "sysctl KERN_PROC_ARGV failed: " << strerror(errno);
+    return false;
+  }
+
+  server_path_ = std::string(argv_buffer.c_str());
+  server_pid_ = pid;
+#endif  // __OpenBSD__
 
   MOZC_VLOG(1) << "server path: " << server_path << " " << server_path_;
 
