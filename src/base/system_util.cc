@@ -80,6 +80,12 @@
 #include "absl/container/fixed_array.h"
 #endif  // !_WIN32
 
+#ifdef __OpenBSD__
+#include <sys/sysctl.h>
+
+#include <cerrno>
+#endif  // __OpenBSD__
+
 namespace mozc {
 namespace {
 
@@ -215,7 +221,7 @@ std::string UserProfileDirectoryImpl::GetUserProfileDirectory() const {
     return FileUtil::JoinPath(dir, "Mozc");
 #endif  //  GOOGLE_JAPANESE_INPUT_BUILD
 
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__OpenBSD__)
     // 1. If "$HOME/.mozc" already exists,
     //    use "$HOME/.mozc" for backward compatibility.
     // 2. If $XDG_CONFIG_HOME is defined
@@ -313,7 +319,7 @@ std::string GetMozcInstallDirFromRegistry() {
 #endif  // _WIN32
 
 std::string SystemUtil::GetServerDirectory() {
-  if constexpr (port::IsLinuxBase() || port::IsWasm()) {
+  if constexpr (port::IsLinuxBase() || port::IsWasm() || port::IsOpenbsd()) {
     return std::string(kMozcServerDir);
   }
 
@@ -369,7 +375,7 @@ std::string SystemUtil::GetToolPath() {
 }
 
 std::string SystemUtil::GetDocumentDirectory() {
-  if constexpr (port::IsLinuxBase()) {
+  if constexpr (port::IsLinuxBase() || port::IsOpenbsd()) {
     return std::string(kMozcDocumentDir);
   } else if constexpr (port::IsAppleBase()) {
     return GetServerDirectory();
@@ -562,9 +568,9 @@ std::string GetSessionIdString() {
 #endif  // _WIN32
 
 std::string SystemUtil::GetDesktopNameAsString() {
-#if defined(__linux__) || defined(__wasm__)
+#if defined(__linux__) || defined(__wasm__) || defined(__OpenBSD__)
   return Environ::GetEnv("DISPLAY");
-#endif  // __linux__ || __wasm__
+#endif  // __linux__ || __wasm__ || __OpenBSD__
 
 #if defined(__APPLE__)
   return "";
@@ -623,9 +629,11 @@ std::string SystemUtil::GetOSVersionString() {
                           AndroidUtil::kSystemPropertyOsVersion, "Unknown"));
 #elif defined(__linux__)
   return "Linux";
-#else   // !_WIN32 && !__APPLE__ && !__linux__
+#elif defined(__OpenBSD__)
+  return "OpenBSD";
+#else   // !_WIN32 && !__APPLE__ && !__linux__ && !__OpenBSD__
   return "Unknown";
-#endif  // _WIN32, __APPLE__, __linux__
+#endif  // _WIN32, __APPLE__, __linux__, __OpenBSD__
 }
 
 void SystemUtil::DisableIME() {
@@ -674,6 +682,19 @@ uint64_t SystemUtil::GetTotalPhysicalMemory() {
   return 0;
 #endif  // defined(_SC_PAGESIZE) && defined(_SC_PHYS_PAGES)
 #endif  // __linux__ || __wasm__
+
+#if defined(__OpenBSD__)
+  // OpenBSD's sysconf() does not support _SC_PHYS_PAGES (a GNU extension),
+  // so query the total physical memory in bytes via sysctl(2) instead.
+  int mib[] = {CTL_HW, HW_PHYSMEM64};
+  uint64_t total_memory = 0;
+  size_t size = sizeof(total_memory);
+  if (sysctl(mib, std::size(mib), &total_memory, &size, nullptr, 0) == -1) {
+    LOG(ERROR) << "sysctl with hw.physmem64 failed. errno: " << errno;
+    return 0;
+  }
+  return total_memory;
+#endif  // __OpenBSD__
 
   // If none of the above platforms is specified, the compiler raises an error
   // because of no return value.

@@ -1,0 +1,135 @@
+mozc_library(file_stream.cc DEPENDS absl::status absl::log)
+mozc_library(file/recursive.cc DEPENDS absl::log mozc::base::file_util)
+mozc_library(file/temp_dir.cc DEPENDS absl::log absl::statusor mozc::base::file_util mozc::base::file::recursive mozc::base::environ)
+mozc_library(container/serialized_string_array.cc DEPENDS absl::log mozc::base::file_util)
+
+set(COMPOSITION_TABLES
+    "12keys-halfwidthascii.tsv"
+    "12keys-hiragana.tsv"
+    "12keys-hiragana_intuitive.tsv"
+    "50keys-hiragana.tsv"
+    "flick-halfwidthascii.tsv"
+    "flick-halfwidthascii_ios.tsv"
+    "flick-hiragana.tsv"
+    "flick-hiragana_intuitive.tsv"
+    "flick-number.tsv"
+    "godan-hiragana.tsv"
+    "hiragana-romanji.tsv"
+    "kana.tsv"
+    "notouch-hiragana.tsv"
+    "qwerty_mobile-halfwidthascii.tsv"
+    "qwerty_mobile-hiragana.tsv"
+    "romanji-hiragana.tsv"
+    "toggle_flick-halfwidthascii.tsv"
+    "toggle_flick-halfwidthascii_ios.tsv"
+    "toggle_flick-hiragana.tsv"
+    "toggle_flick-hiragana_intuitive.tsv"
+    "toggle_flick-number.tsv"
+)
+list(TRANSFORM COMPOSITION_TABLES PREPEND ${MOZC_SOURCE_DIR}/data/preedit/)
+
+set(KEYMAP_FILES
+    "atok.tsv"
+    "chromeos.tsv"
+    "kotoeri.tsv"
+    "mobile.tsv"
+    "ms-ime.tsv"
+    "overlay_henkan_muhenkan_to_ime_on_off.tsv")
+list(TRANSFORM KEYMAP_FILES PREPEND ${MOZC_SOURCE_DIR}/data/keymap/)
+
+mozc_python_gen_file(base/gen_config_file_stream_data.py
+    OUTPUTS config_file_stream_data.inc
+    INPUTS ${COMPOSITION_TABLES}
+    ${KEYMAP_FILES}
+    ARGS --output ${CMAKE_CURRENT_BINARY_DIR}/config_file_stream_data.inc
+    ${COMPOSITION_TABLES}
+    ${KEYMAP_FILES})
+mozc_library(config_file_stream.cc
+    SOURCES
+    ${CMAKE_CURRENT_BINARY_DIR}/config_file_stream_data.inc
+    DEPENDS
+    absl::raw_hash_set
+    absl::log
+    mozc::base::file_util
+    mozc::base::system_util
+)
+target_include_directories(base-config_file_stream PRIVATE ${PROJECT_BINARY_DIR})
+
+mozc_library(mmap.cc DEPENDS absl::str_format absl::log absl::status absl::statusor)
+mozc_library(environ.cc DEPENDS absl::string_view)
+mozc_library(file_util.cc DEPENDS mozc::base::mmap mozc::base::file_stream absl::status absl::log)
+mozc_library(system_util.cc DEPENDS mozc::base::file_util mozc::base::environ absl::log absl::check absl::no_destructor)
+target_compile_definitions(base-system_util PRIVATE
+    MOZC_SERVER_DIR="${CMAKE_INSTALL_FULL_LIBDIR}/mozc"
+    MOZC_DOCUMENT_DIR="${CMAKE_INSTALL_FULL_LIBDIR}/mozc/documents"
+)
+mozc_library(run_level.cc)
+mozc_library(log_file.cc DEPENDS absl::log mozc::base::file_stream absl::log_initialize)
+mozc_library(init_mozc.cc DEPENDS absl::flags mozc::base::file_util mozc::base::system_util mozc::base::log_file absl::flags_parse)
+mozc_library(vlog.cc DEPENDS absl::log_flags absl::base absl::log)
+mozc_library(process_mutex.cc DEPENDS mozc::base::vlog absl::log absl::status absl::strings mozc::base::system_util)
+mozc_library(clock.cc DEPENDS absl::time)
+mozc_library(cpu_stats.cc DEPENDS absl::log)
+mozc_library(hash.cc DEPENDS absl::log absl::check)
+mozc_library(number_util.cc DEPENDS absl::strings absl::str_format absl::log mozc::base::util)
+mozc_library(process.cc DEPENDS absl::log mozc::base::vlog mozc::base::system_util)
+mozc_library(stopwatch.cc DEPENDS mozc::base::clock)
+mozc_library(text_normalizer.cc DEPENDS mozc::base::util)
+mozc_library(encryptor.cc DEPENDS
+    absl::log
+    absl::random_random
+    absl::check
+    mozc::base::unverified_sha1
+    mozc::base::unverified_aes256
+    mozc::base::password_manager)
+mozc_library(password_manager.cc DEPENDS
+    absl::log
+    absl::random_random
+    mozc::base::mmap
+    mozc::base::file_util
+    mozc::base::system_util
+    mozc::base::random)
+mozc_library(unverified_sha1.cc DEPENDS absl::log absl::check)
+mozc_library(unverified_aes256.cc DEPENDS absl::log absl::check)
+mozc_python_gen_file(build_tools/mozc_version.py
+    OUTPUTS mozc_version.txt
+    INPUTS version.bzl
+    ARGS --template_path version.bzl
+    --output "${CMAKE_CURRENT_BINARY_DIR}/mozc_version.txt"
+    --target_platform=Linux
+)
+mozc_python_gen_file(build_tools/replace_version.py
+    OUTPUTS version_def.h
+    INPUTS ${CMAKE_CURRENT_BINARY_DIR}/mozc_version.txt
+    base/version_def_template.h
+    ARGS --version_file "${CMAKE_CURRENT_BINARY_DIR}/mozc_version.txt"
+    --input base/version_def_template.h
+    --output "${CMAKE_CURRENT_BINARY_DIR}/version_def.h"
+    --branding=Mozc
+)
+
+mozc_library(version.cc SOURCES ${CMAKE_CURRENT_BINARY_DIR}/version_def.h DEPENDS absl::log mozc::base::number_util)
+set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/version_def.h PROPERTIES GENERATED TRUE)
+target_include_directories(base-version PRIVATE ${PROJECT_BINARY_DIR})
+mozc_library(strings
+    SOURCES
+    strings/internal/double_array.cc
+    strings/internal/japanese_rules.cc
+    strings/internal/utf8_internal.cc
+    strings/japanese.cc
+    strings/unicode.cc
+    DEPENDS absl::strings absl::log
+)
+mozc_library(util.cc
+    DEPENDS absl::log absl::check mozc::base::strings
+)
+mozc_library(random.cc DEPENDS absl::random_random mozc::base::util)
+mozc_library(multifile.cc DEPENDS absl::log mozc::base::file_stream)
+mozc_library(codegen_bytearray_stream.cc DEPENDS absl::str_format)
+mozc_library(protobuf_util.cc DEPENDS
+    protobuf::libprotobuf
+    absl::function_ref
+    absl::string_view
+)
+mozc_library(const.h)
+mozc_library(coordinates.h)

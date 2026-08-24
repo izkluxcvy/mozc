@@ -27,8 +27,9 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// __linux__ only. Note that __ANDROID__/__wasm__ don't reach here.
-#if defined(__linux__)
+// __linux__ and __OpenBSD__ only. Note that __ANDROID__/__wasm__ don't reach
+// here.
+#if defined(__linux__) || defined(__OpenBSD__)
 
 #include <fcntl.h>
 #include <sys/select.h>
@@ -38,6 +39,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include <csignal>
 #include <cerrno>
 #include <cstddef>
 #include <cstdint>
@@ -63,6 +65,17 @@ namespace mozc {
 namespace {
 
 constexpr int kInvalidSocket = -1;
+
+#ifdef MSG_NOSIGNAL
+constexpr int kSendFlags = MSG_NOSIGNAL;
+#else   // MSG_NOSIGNAL
+// OpenBSD does not define MSG_NOSIGNAL. Ignore SIGPIPE process-wide instead,
+// so that send() to a closed socket returns EPIPE (handled by the caller via
+// the return value) rather than terminating the process.
+constexpr int kSendFlags = 0;
+[[maybe_unused]] const bool kSigpipeIgnored =
+    (std::signal(SIGPIPE, SIG_IGN) != SIG_ERR);
+#endif  // !MSG_NOSIGNAL
 
 absl::Status mkdir_p(absl::string_view dirname) {
   const std::string parent_dir(FileUtil::Dirname(dirname));
@@ -121,6 +134,7 @@ bool IsWriteTimeout(int socket, absl::Duration timeout) {
 bool IsPeerValid(int socket, pid_t *pid) {
   *pid = 0;
 
+#if defined(__linux__)
   struct ucred peer_cred;
   int peer_cred_len = sizeof(peer_cred);
   if (getsockopt(socket, SOL_SOCKET, SO_PEERCRED, &peer_cred,
@@ -135,6 +149,19 @@ bool IsPeerValid(int socket, pid_t *pid) {
   }
 
   *pid = peer_cred.pid;
+#elif defined(__OpenBSD__)
+  uid_t euid;
+  gid_t egid;
+  if (::getpeereid(socket, &euid, &egid) < 0) {
+    LOG(ERROR) << "cannot get peer credential. Not a Unix socket?";
+    return false;
+  }
+
+  if (euid != ::geteuid()) {
+    LOG(WARNING) << "uid mismatch." << euid << "!=" << ::geteuid();
+    return false;
+  }
+#endif  // __linux__, __OpenBSD__
 
   return true;
 }
@@ -148,7 +175,7 @@ IPCErrorType SendMessage(int socket, absl::string_view msg,
       return IPC_TIMEOUT_ERROR;
     }
     const ssize_t l =
-        ::send(socket, msg.data() + offset, msg.size() - offset, MSG_NOSIGNAL);
+        ::send(socket, msg.data() + offset, msg.size() - offset, kSendFlags);
     if (l < 0) {
       // An error occurs.
       LOG(ERROR) << "an error occurred during sending \"" << msg.substr(offset)
@@ -481,4 +508,4 @@ void IPCServer::Terminate() {
 
 }  // namespace mozc
 
-#endif  // __linux__
+#endif  // __linux__ || __OpenBSD__

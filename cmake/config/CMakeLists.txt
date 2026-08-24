@@ -1,0 +1,24 @@
+mozc_library(config_handler.cc DEPENDS
+    mozc::protocol::protocol
+    mozc::base::vlog
+    mozc::base::clock
+    mozc::base::version
+    absl::no_destructor
+    mozc::base::hash
+    mozc::base::config_file_stream
+    mozc::base::system_util)
+mozc_library(stats_config_util.cc DEPENDS absl::no_destructor absl::base)
+mozc_library(character_form_manager.cc DEPENDS
+    mozc::protocol::protocol
+    absl::raw_hash_set
+    absl::log
+    absl::check
+    mozc::base::strings
+    mozc::base::util
+    mozc::base::vlog
+    mozc::base::mmap
+    absl::no_destructor
+    mozc::base::config_file_stream
+    mozc::config::config_handler
+    mozc::storage::lru_storage
+)

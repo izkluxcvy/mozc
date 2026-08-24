@@ -103,8 +103,8 @@ void UnlinkFileOrLog(const char* path) {
 }
 }  // namespace
 
-#if (defined(__linux__) && !defined(__ANDROID__)) || \
-    (defined(TARGET_OS_OSX) && TARGET_OS_OSX)
+#if (defined(__linux__) && !defined(__ANDROID__)) ||       \
+    (defined(TARGET_OS_OSX) && TARGET_OS_OSX) || defined(__OpenBSD__)
 
 absl::Status DeleteRecursively(const absl::string_view path) {
   // fts is not POSIX, but it's available on both Linux and MacOS.
@@ -193,7 +193,7 @@ absl::Status DeleteRecursively(const absl::string_view path) {
   return absl::OkStatus();
 }
 
-#endif  // !(__linux__ && !__ANDROID__) || TARGET_OS_OSX)
+#endif  // !((__linux__ && !__ANDROID__) || TARGET_OS_OSX || __OpenBSD__)
 #endif  // !_WIN32
 
 }  // namespace mozc::file

@@ -29,9 +29,9 @@
 
 #include "base/run_level.h"
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__OpenBSD__)
 #include <sys/types.h>
-#endif  // __linux__
+#endif  // __linux__ || __OpenBSD__
 
 #ifdef _WIN32
 #include <aclapi.h>
