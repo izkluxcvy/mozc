@@ -1,5 +1,5 @@
-## Mozc port
-port for OpenBSD.
+## Mozc ports
+Switch build system to CMake and add OpenBSD flag.
 
 ### Copied files
 - [google/mozc](https://github.com/google/mozc)
@@ -10,7 +10,7 @@ port for OpenBSD.
     - /cmake, cmake base repo.
 
 ### Build
-docs/build_for_openbsd.md
+[docs/build_mozc_for_openbsd.md](docs/build_mozc_for_openbsd.md)
 
 ### Misc
 It seems that upstream code has only been partially clang-formatted.
