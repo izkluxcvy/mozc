@@ -48,31 +48,6 @@ mozc_library(result_filter.cc DEPENDS
     mozc::converter::connector
     mozc::protocol::protocol
 )
-mozc_library(english_decoder.cc DEPENDS
-    mozc::prediction::result
-    mozc::base::util
-    mozc::dictionary::dictionary_token
-    mozc::engine::modules
-    mozc::transliteration::transliteration
-)
-mozc_library(zero_query_decoder.cc DEPENDS
-    mozc::prediction::result
-    mozc::prediction::zero_query_dict
-    mozc::base::util
-    mozc::base::number_util
-    mozc::dictionary::dictionary_token
-    mozc::engine::modules
-    mozc::protocol::protocol
-    mozc::transliteration::transliteration
-)
-mozc_library(handwriting_decoder.cc DEPENDS
-    mozc::prediction::realtime_decoder
-    mozc::prediction::result
-    mozc::base::util
-    mozc::dictionary::dictionary_token
-    mozc::engine::modules
-    mozc::protocol::protocol
-)
 mozc_library(dictionary_prediction_aggregator.cc DEPENDS
     mozc::protocol::protocol
     mozc::base::util
@@ -82,9 +57,6 @@ mozc_library(dictionary_prediction_aggregator.cc DEPENDS
     mozc::prediction::result
     mozc::prediction::number_decoder
     mozc::prediction::result_filter
-    mozc::prediction::english_decoder
-    mozc::prediction::zero_query_decoder
-    mozc::prediction::handwriting_decoder
     mozc::engine::modules
 )
 mozc_library(result.cc DEPENDS
@@ -105,7 +77,6 @@ mozc_library(dictionary_predictor.cc DEPENDS
 mozc_library(realtime_decoder.cc DEPENDS
     mozc::base::util
     mozc::converter::segments
-    mozc::converter::converter_util
     mozc::dictionary::dictionary_token
 )
 mozc_library(predictor.cc DEPENDS

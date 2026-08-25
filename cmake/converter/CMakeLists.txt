@@ -47,10 +47,6 @@ mozc_library(immutable_converter.cc DEPENDS
     mozc::converter::nbest_generator
     mozc::dictionary::pos_matcher
     mozc::engine::modules)
-mozc_library(converter_util.cc DEPENDS
-    mozc::converter::segments
-    absl::check
-    absl::strings)
 mozc_library(connector.cc DEPENDS absl::log absl::check absl::statusor mozc::storage::louds::louds)
 mozc_library(segmenter.cc DEPENDS absl::log absl::check)
 mozc_library(gen_segmenter_bitarray.cc DEPENDS mozc::protocol::segmenter_data_pb mozc::base::file_stream)
