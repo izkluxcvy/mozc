@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 3.12)
 project(mozc)
 
-option(ENABLE_SERVER "Build Fcitx 5 Mozc with server" On)
+option(ENABLE_SERVER "Build Mozc with server" On)
 option(BUILD_SERVER "Build mozc_server" On)
 option(BUILD_TOOL "Build mozc_tool" On)
 option(BUILD_FCITX "Build fcitx5-mozc" On)
 option(BUILD_IBUS "Build ibus_mozc" On)
+option(MOZC_USE_SYSTEM_DEPS
+    "Use system-installed abseil-cpp/protobuf instead of fetching them at configure time (required for sandboxed builds such as OpenBSD ports)"
+    Off)
 
 find_package(PkgConfig REQUIRED)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
@@ -24,31 +27,36 @@ endif()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Fetch dependencies
-include(FetchContent)
+if(MOZC_USE_SYSTEM_DEPS)
+  find_package(absl CONFIG REQUIRED)
+  find_package(protobuf CONFIG REQUIRED)
+else()
+  # Fetch dependencies
+  include(FetchContent)
 
-set(ABSL_PROPAGATE_CXX_STD ON)
-set(ABSL_ENABLE_INSTALL OFF)
-FetchContent_Declare(
-  absl
-  GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
-  GIT_TAG 20260107.1
-  GIT_SHALLOW TRUE
-)
+  set(ABSL_PROPAGATE_CXX_STD ON)
+  set(ABSL_ENABLE_INSTALL OFF)
+  FetchContent_Declare(
+    absl
+    GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
+    GIT_TAG 20260107.1
+    GIT_SHALLOW TRUE
+  )
 
-set(protobuf_BUILD_TESTS OFF)
-set(protobuf_INSTALL OFF)
-set(protobuf_ABSL_PROVIDER "package")
-FetchContent_Declare(
-  protobuf
-  GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-  GIT_TAG v34.1
-  GIT_SHALLOW TRUE
-)
+  set(protobuf_BUILD_TESTS OFF)
+  set(protobuf_INSTALL OFF)
+  set(protobuf_ABSL_PROVIDER "package")
+  FetchContent_Declare(
+    protobuf
+    GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
+    GIT_TAG v34.1
+    GIT_SHALLOW TRUE
+  )
 
-FetchContent_MakeAvailable(absl protobuf)
+  FetchContent_MakeAvailable(absl protobuf)
 
-include(${protobuf_SOURCE_DIR}/cmake/protobuf-generate.cmake)
+  include(${protobuf_SOURCE_DIR}/cmake/protobuf-generate.cmake)
+endif()
 
 include(cmake/Macros.cmake)
 
