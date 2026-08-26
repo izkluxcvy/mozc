@@ -48,7 +48,25 @@ mozc_library(result_filter.cc DEPENDS
     mozc::converter::connector
     mozc::protocol::protocol
 )
+mozc_library(decoder_util.cc DEPENDS
+    absl::btree
+    absl::span
+    mozc::prediction::result
+    mozc::base::number_util
+    mozc::base::util
+    mozc::protocol::protocol
+)
+mozc_library(dictionary_decoder.cc DEPENDS
+    absl::btree
+    absl::algorithm
+    mozc::prediction::decoder_util
+    mozc::prediction::result
+    mozc::base::util
+    mozc::engine::modules
+    mozc::dictionary::dictionary_token
+)
 mozc_library(english_decoder.cc DEPENDS
+    mozc::prediction::decoder_util
     mozc::prediction::result
     mozc::base::util
     mozc::dictionary::dictionary_token
@@ -56,6 +74,7 @@ mozc_library(english_decoder.cc DEPENDS
     mozc::transliteration::transliteration
 )
 mozc_library(zero_query_decoder.cc DEPENDS
+    mozc::prediction::decoder_util
     mozc::prediction::result
     mozc::prediction::zero_query_dict
     mozc::base::util
@@ -66,6 +85,7 @@ mozc_library(zero_query_decoder.cc DEPENDS
     mozc::transliteration::transliteration
 )
 mozc_library(handwriting_decoder.cc DEPENDS
+    mozc::prediction::decoder_util
     mozc::prediction::realtime_decoder
     mozc::prediction::result
     mozc::base::util
@@ -79,6 +99,8 @@ mozc_library(dictionary_prediction_aggregator.cc DEPENDS
     mozc::base::number_util
     mozc::converter::segments
     mozc::composer::composer
+    mozc::prediction::decoder_util
+    mozc::prediction::dictionary_decoder
     mozc::prediction::result
     mozc::prediction::number_decoder
     mozc::prediction::result_filter
